@@ -15,7 +15,8 @@ project:
 # Configuration settings for new git repository.
 git:
   default_branch: master
-  remotes: []
+  remotes: 
+    - 'example.user@svn-1234.hosting.com:example.user.git'
 
 drush:
   # You can set custom project aliases in drush/site-aliases/aliases.drushrc.php.
