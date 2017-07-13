@@ -9,7 +9,7 @@ deploy_updates() {
   preferred_domain=$1
   case $target_env in
     01dev|01test|01live)
-      If [$preferred_domain]
+      if $preferred_domain; then
         acsf_deploy "preferred_domain"
       else
         acsf_deploy
@@ -33,8 +33,7 @@ acsf_deploy() {
 
   echo "Running updates for environment: $target_env"
 
-  If [$preferred_domain]
-  then
+  if $preferred_domain; then
     # Get a simple list of all preferred domains
     while IFS=$'\n' read -r line; do
         sites[i++]="$line"
