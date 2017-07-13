@@ -6,10 +6,14 @@ status=0
 drush_alias=${site}'.'${target_env}
 
 deploy_updates() {
-
+  preferred_domain=$1
   case $target_env in
     01dev|01test|01live)
-      acsf_deploy
+      if $preferred_domain; then
+        acsf_deploy "preferred_domain"
+      else
+        acsf_deploy
+      fi
       ;;
     01devup|01testup|01update)
       ;;
@@ -20,6 +24,7 @@ deploy_updates() {
 }
 
 acsf_deploy() {
+  preferred_domain=$1
   sites=()
   # Prep for BLT commands.
   repo_root="/var/www/html/$site.$target_env"
@@ -28,11 +33,19 @@ acsf_deploy() {
 
   echo "Running updates for environment: $target_env"
 
-  # Generate an array of all site URIs on the Factory from parsed output of Drush utility.
-  while IFS=$'\n' read -r line; do
-      sites[i++]="$line"
-      done < <(drush @"${drush_alias}" --include=./drush acsf-tools-list | grep domains: -A 1 | grep 0: | sed -e 's/^[0: ]*//')
-      unset IFS
+  if $preferred_domain; then
+    # Get a simple list of all preferred domains
+    while IFS=$'\n' read -r line; do
+        sites[i++]="$line"
+        done < <(drush @"${drush_alias}" --include=./drush acsf-tools-pd)
+        unset IFS
+  else
+    # Generate an array of all site URIs on the Factory from parsed output of Drush utility.
+    while IFS=$'\n' read -r line; do
+        sites[i++]="$line"
+        done < <(drush @"${drush_alias}" --include=./drush acsf-tools-list | grep domains: -A 1 | grep 0: | sed -e 's/^[0: ]*//')
+        unset IFS
+  fi
 
   # Loop through each available site uri and run BLT deploy updates.
   for uri in "${sites[@]}"; do
