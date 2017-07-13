@@ -66,7 +66,6 @@ class SettingsCommand extends BltTasks {
       $project_local_drush_file = "$multisite_dir/local.drushrc.php";
 
       $copy_map = [
-        $default_project_default_settings_file => $project_default_settings_file,
         $blt_local_settings_file => $default_local_settings_file,
         $default_local_settings_file => $project_local_settings_file,
         $blt_local_drush_file => $default_local_drush_file,
@@ -74,8 +73,12 @@ class SettingsCommand extends BltTasks {
       ];
 
       // Only add the settings file if the default exists.
-      if (file_exists($project_default_settings_file)) {
+      if (file_exists($default_project_default_settings_file)) {
+        $copy_map[$default_project_default_settings_file] = $project_default_settings_file;
         $copy_map[$project_default_settings_file] = $project_settings_file;
+      }
+      else {
+        $this->logger->warning("No $default_project_default_settings_file file found.");
       }
 
       $task = $this->taskFilesystemStack()
@@ -133,7 +136,7 @@ class SettingsCommand extends BltTasks {
     if (!file_exists($this->projectBehatLocalConfigFile)) {
       $this->say("Generating Behat configuration files...");
       $result = $this->taskFilesystemStack()
-        ->copy($this->getConfigValue('blt.root') . '/template/tests/behat/behat.yml', $this->getConfigValue('repo.root') . '/test/behat/behat.yml')
+        ->copy($this->getConfigValue('blt.root') . '/template/tests/behat/behat.yml', $this->getConfigValue('repo.root') . '/tests/behat/behat.yml')
         ->copy($this->getConfigValue('blt.root') . '/template/tests/behat/example.local.yml', $this->defaultBehatLocalConfigFile)
         ->copy($this->defaultBehatLocalConfigFile, $this->projectBehatLocalConfigFile)
         ->stopOnFail()

@@ -29,7 +29,7 @@ This document address the challenge of capturing ("exporting") and deploying ("i
 
 ### How BLT handles configuration updates
 
-BLT-based projects already support this workflow, including automatic imports of configuration updates. BLT defines a generic `setup:update` task that applies any pending database and configuration updates. This same task can be re-used locally, in a CI environment, or remotely (via the `local:update`, `ci:update`, and `deploy:update` wrappers, respectively) to ensure that configuration changes and database updates behave identically in all environments.
+BLT-based projects already support this workflow, including automatic imports of configuration updates. BLT defines a generic `setup:update` task that applies any pending database and configuration updates. This same task can be re-used locally or remotely (via the `setup:update`, and `deploy:update` wrappers, respectively) to ensure that configuration changes and database updates behave identically in all environments.
 
 When you run one of these update commands, they perform the following updates (see `setup:config-import`):
 
@@ -72,7 +72,7 @@ We need to find a better way of preventing this than manually monitoring module 
 
 Configuration stored on disk, whether via the core configuration system or features, is essentially a flat-file database and must be treated as such. For instance, all changes to configuration should be made via the UI or an appopriate API and then exported to disk. You should never make changes to individual config files by hand, just as you would never write a raw SQL query to add a Drupal content type. Even seemingly small changes to one part of the configuration can have sweeping and unanticipated changes. For instance, enabling the Panelizer or Workbench modules will modify the configuration of every content type on the site.
 
-BLT has a built-in test that will help protect against some of these mistakes. After configuration is imported (i.e. during `local:update` or `deploy:update`), it will check if any configuration remains overridden. If so, the build will fail, alerting you to the fact that there are uncaptured configuration changes or possibly a corrupt configuration export. This test acts as a canary and should not be disabled, but if you need to temporarily disable it in an emergency (i.e. if deploys to a cloud environment are failing), you can do so by settings `cm.allow-overrides` to `true`.
+BLT has a built-in test that will help protect against some of these mistakes. After configuration is imported (i.e. during `setup:update` or `deploy:update`), it will check if any configuration remains overridden. If so, the build will fail, alerting you to the fact that there are uncaptured configuration changes or possibly a corrupt configuration export. This test acts as a canary and should not be disabled, but if you need to temporarily disable it in an emergency (i.e. if deploys to a cloud environment are failing), you can do so by settings `cm.allow-overrides` to `true`.
 
 Finally, you should enable protected branches in Github to ensure that pull requests can only be merged if they are up to date with the target branch. This protects against a scenario where, for instance, one PR adds a new content type, while another PR enables Workbench (which would modify that content type). Individually, each of these PRs is perfectly valid, but once they are both merged they produce a corrupt configuration (where the new content type is lacking Workbench configuration). When used with BLT’s built-in test for configuration overrides, protected branches can quite effectively prevent some forms of configuration corruption.
 
@@ -129,7 +129,7 @@ Note that when you run `drush cex`, if the project has been configured correctly
 For example, let's say you want to install and configure the Stage File Proxy module locally but not in remote environments. Follow these steps to add it to the local split:
 
 1. Require the module via `composer require drupal/stage_file_proxy`.
-2. Start from a clean installation: `blt local:setup` or `blt local:refresh`.
+2. Start from a clean installation: `blt setup` or `blt sync:refresh`.
 3. Install the Stage File Proxy module via `drush en stage_file_proxy -y`
 4. Configure the Stage File Proxy module as appropriate.
 5. Navigate to the local config split configuration page: `/admin/config/development/configuration/config-split/local/edit`
@@ -148,7 +148,7 @@ Some configuration that's intended to be "unlocked" in production might also be 
 
 To capture and deploy configuration changes using Config Split:
 
-1. Ensure that your local environment is up to date and refreshed (e.g. `git pull` and `blt local:refresh`).
+1. Ensure that your local environment is up to date and refreshed (e.g. `git pull` and `blt sync:refresh`).
 2. Use the Drupal UI to make the necessary configuration changes in your local environment. For instance, go to http://local.example.com/admin/structure/types/add to add a new content type.
 3. Once you have completed local development, use `drush cex` (`config-export`) to export your configuration changes to the `config/default` directory. Remember to use an appropriate alias if you are using a VM (e.g. `drush @example.local cex`).
 4. Review the updated configuration in `config/default` using `git diff`.  If you are satisfied with the changes, commit them and open a pull request.
