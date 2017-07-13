@@ -6,10 +6,14 @@ status=0
 drush_alias=${site}'.'${target_env}
 
 deploy_updates() {
-
+  preferred_domain=$1
   case $target_env in
     01dev|01test|01live)
-      acsf_deploy
+      If [$preferred_domain]
+        acsf_deploy "preferred_domain"
+      else
+        acsf_deploy
+      fi
       ;;
     01devup|01testup|01update)
       ;;
