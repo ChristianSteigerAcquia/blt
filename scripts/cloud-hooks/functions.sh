@@ -29,7 +29,7 @@ acsf_deploy() {
   # Generate an array of all site URIs on the Factory from parsed output of Drush utility.
   while IFS=$'\n' read -r line; do
       sites[i++]="$line"
-      done < <(drush @"${drush_alias}" --include=./drush acsf-tools-list | grep domains: -A 1 | grep 0: | sed -e 's/^[0: ]*//')
+      done < <(drush @"${drush_alias}" --include=./drush acsf-tools-pd)
       unset IFS
 
   # Loop through each available site uri and run BLT deploy updates.

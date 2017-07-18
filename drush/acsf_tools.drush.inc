@@ -23,6 +23,14 @@ function acsf_tools_drush_command() {
     ),
   );
 
+  $items['acsf-tools-pd'] = array(
+    'description' => dt('List all preferred domains of the factory.'),
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_SITE,
+    'examples' => array(
+      'drush acsf-tools-pd' => 'Get a list of preferred domains.',
+    ),
+  );
+
   $items['acsf-tools-ml'] = array(
     'description' => dt('Runs the passed drush command against all the sites of the factory (ml stands for multiple -l option).'),
     'allow-additional-options' => TRUE,
@@ -74,6 +82,19 @@ function drush_acsf_tools_list() {
 
       // Print attributes.
       _drush_acsf_tools_recursive_print($details, 2);
+    }
+  }
+}
+
+/**
+ * Action callback for acsf-tools-pd command.
+ * List sites with their preferred domains
+ */
+function drush_acsf_tools_pd() {
+  // Look for list of sites and print it.
+  if ($sites = _drush_acsf_tools_get_sites_pd()) {
+    foreach ($sites as $name => $details) {
+      drush_print($details['domain']);
     }
   }
 }
@@ -179,6 +200,32 @@ function _drush_acsf_tools_get_sites() {
         $sites[$site_details['name']] = $site_details;
       }
       $sites[$site_details['name']]['domains'][] = $domain;
+    }
+  }
+  else {
+    drush_log("\nFailed to retrieve the list of sites of the factory.", 'error');
+  }
+
+  return $sites;
+}
+
+/**
+ * Utility function to retrieve the preferred domains of all sites
+ */
+function _drush_acsf_tools_get_sites_pd() {
+  $sites = FALSE;
+
+  // Look for list of sites and loop over it.
+  if (($map = gardens_site_data_load_file()) && isset($map['sites'])) {
+    // Acquire sites info.
+    $sites = array();
+    foreach ($map['sites'] as $domain => $site_details) {
+      if(!isset($sites[$site_details['name']]['prefered_domain']) ){
+        $sites[$site_details['name']]['domain'] = $domain;
+      }
+      if(isset($site_details['flag']['prefered_domain']) &&  $site_details['flag']['prefered_domain'] == TRUE){
+        $sites[$site_details['name']]['prefered_domain'] = TRUE;
+      }    
     }
   }
   else {
